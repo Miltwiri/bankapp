@@ -2,8 +2,10 @@ package com.example.bankapp.code.config;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -21,24 +23,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private JwtTokenProvider jwtTokenProvider;
 
     @Autowired
-    private customUserDetailsService customUserDetailsService;
+    private CustomUserDetailsService customUserDetailsService;
 
-    @Override
-    protected void doFilterInternal(@SuppressWarnings("null") HttpServletRequest request, @SuppressWarnings("null") HttpServletResponse response, @SuppressWarnings("null") FilterChain filterChain)
-            throws ServletException, IOException {
+   @Override
+protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+        throws ServletException, IOException {
 
-        String jwt = getJwtFromRequest(request);
+    String jwt = getJwtFromRequest(request);
 
-        if (jwt != null && jwtTokenProvider.validateJwtToken(jwt)) {
-            String username = jwtTokenProvider.getUsernameFromJwtToken(jwt);
+    if (jwt != null && jwtTokenProvider.validateJwtToken(jwt)) {
+        String username = jwtTokenProvider.getUsernameFromJwtToken(jwt);
 
-            Authentication authentication = (Authentication) customUserDetailsService.loadUserByUsername(username);
+        UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-        }
+        UsernamePasswordAuthenticationToken authentication = 
+            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
-        filterChain.doFilter(request, response);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
+
+    filterChain.doFilter(request, response);
+}
+
 
     private String getJwtFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");

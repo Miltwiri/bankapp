@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.Optional;
 
 @Service
-public class customUserDetailsService implements UserDetailsService {
+public class CustomUserDetailsService implements UserDetailsService {
 
     @Autowired
     private CustomerRepository customerRepository;
